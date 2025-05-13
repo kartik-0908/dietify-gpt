@@ -238,6 +238,7 @@ export async function POST(request: Request) {
       return new Response(stream);
     }
   } catch (_) {
+    console.error(_);
     return new Response('An error occurred while processing your request!', {
       status: 500,
     });
