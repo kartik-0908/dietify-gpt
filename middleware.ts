@@ -31,7 +31,8 @@ export async function middleware(request: NextRequest) {
   }
 
   const isGuest = guestRegex.test(token?.email ?? '');
-  const hasOnboarded = token?.hasOnboarded; // Adjust this based on your token/user object
+  console.log(token)
+  const hasOnboarded = token?.id; // Adjust this based on your token/user object
 
   // Redirect guest users to /register
   if (isGuest && pathname !== '/register') {
