@@ -550,3 +550,47 @@ export async function updateUserPersonalDetails({
     throw error;
   }
 }
+
+export async function getUserPersonalDetailsIfComplete({ userId }: { userId: string }) {
+  try {
+    const [userRecord] = await db.select().from(user).where(eq(user.id, userId));
+    if (!userRecord) return null;
+    const {
+      firstName,
+      lastName,
+      age,
+      weight,
+      height,
+      mobileNumber,
+      dietaryPreference,
+      medicalConditions,
+    } = userRecord;
+    if (
+      firstName &&
+      lastName &&
+      age &&
+      weight &&
+      height &&
+      mobileNumber &&
+      dietaryPreference &&
+      medicalConditions &&
+      Array.isArray(medicalConditions) &&
+      medicalConditions.length > 0
+    ) {
+      return {
+        firstName,
+        lastName,
+        age,
+        weight,
+        height,
+        mobileNumber,
+        dietaryPreference,
+        medicalConditions,
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Failed to get user personal details from database');
+    throw error;
+  }
+}

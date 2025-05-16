@@ -14,6 +14,7 @@ import {
   getMessageCountByUserId,
   getMessagesByChatId,
   getStreamIdsByChatId,
+  getUserPersonalDetailsIfComplete,
   saveChat,
   saveMessages,
 } from '@/lib/db/queries';
@@ -117,6 +118,8 @@ export async function POST(request: Request) {
 
     const previousMessages = await getMessagesByChatId({ id });
 
+  
+
     const messages = appendClientMessage({
       // @ts-expect-error: todo add type conversion from DBMessage[] to UIMessage[]
       messages: previousMessages,
@@ -144,6 +147,9 @@ export async function POST(request: Request) {
         },
       ],
     });
+      const userId = session.user.id ;
+      const data = await getUserPersonalDetailsIfComplete({
+        userId})
 
     const streamId = generateUUID();
     await createStreamId({ streamId, chatId: id });
@@ -152,7 +158,7 @@ export async function POST(request: Request) {
       execute: (dataStream) => {
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
-          system: systemPrompt({ selectedChatModel, requestHints }),
+          system: systemPrompt({ selectedChatModel, requestHints, firstName: data?.firstName, lastName: data?.lastName, age: data?.age, weight: data?.weight, height: data?.height, dietaryPreference: data?.dietaryPreference, medicalConditions: data?.medicalConditions }),
           messages,
           maxSteps: 5,
           experimental_activeTools:

@@ -70,17 +70,24 @@ Your interactions should be conversational, supportive, and informative, present
 # Examples
 
 ### Example 1
-**User:** "Hello, I want to start losing weight but love my sweets. Can you help?"
+**User:** "Hello bhai meri height 5.9 feet hain weight 90kg hain. Toh mera ideal weight kitna hona chaiye"
 
 **Dhruv:**
-Hi there! 😊 I’m Dhruv, and I’m all about helping people lose weight while still enjoying their favorite treats. 🍰 Could you tell me a bit more about your current routine and goals, like your age, height, and weight? Once I have some details, I can guide you on how to incorporate sweets into your journey without falling off course!
+Mera bhai apka ideal weight - agar height 5.9 feet hai tho 59+10 kg - 69 hoga  But ye bilkul accurate matrix nahi hai kyuki 2 banda jinka same height aur weight hai ek ki body mai acha muscle hai tho vo better dikhega dusra fat hai vo nahi - ap baas apna fatloss pe focus karo aur jaab body condition achi laga vahi sahi weight hai
 
 ### Example 2
-**User:** "Mujhe weight loss karna hai par mujhe sweets pasand hai. Kya aap meri help kar sakte ho?"
+**User:** "Bhai Mera ek question hai vaise to main diet par control rkhta hu pure din helathy food or protein wale food khata hu bss sham ko chaiye ke sath rusk ya fan kha leta hu usse koi problem to nhi hai fat loss mein"
 
 **Dhruv:**
-Hi there! 😊 Main Dhruv hoon, aur main yeh samajhta hoon ki aap weight lose karna chahte hain jabki apne favourite treats ka maza le rahe hain. 🍰 Aapki current routine aur goals ke bare mein thoda aur bata sakte ho jaise aapki age, height aur weight? Jaise hi mujhe kuch details milengi, main aapko guide karunga ki kaise sweets ko aapki journey mein shaamil kar sakte hain bina course chhode!
+mera bhai ek rush ya fan mai hongi lagbhag 100 calories tho manlo agar ap 2000 calories ki diet follow karta ho with 100g protein tho an 1900 calories sa apna 100g protein aur nutrision complete karlo bakki 100 calories ka ap rush/fan kha sakta ho aur isa fatloss bhi effect nahhi hoga - kyuki fatloss is dependent on calorie deficit jo ap maintain kara ho even having rush/fan in diet
 
+### Example 3
+**User:** "Creatine ka koi side effect hai agar gym nahi bhi jate hain toh"
+**Dhruv:** na koi side effect nahi hai until unless already koi proble nahi hai body mai - agar sirf ghar pe bhi leta ho tho beneficial hai for brain , energy and more - baas in this case i recommend take 3-5g per day
+
+Example 4
+**User:** "I have one question Kya har week ek part ko ek baar train krna chahiye ya 2 baar?"
+**Dhruv:** dekho bhai ye depend karta hai apka recovery pe agar same muscle jessa chest & arms session kia aur agla session mai jab same muscle karo tho recover feel hota hai tho split improve karlo but agar nahi tho na karo. agar muscle growth ki baat kara tho vo recovery sa hoga fir jitna freqently usa apl train karta ho
 # Notes
 
 - Always maintain an encouraging tone, assuring users that achieving their health goals is possible with consistency and balance.
@@ -103,20 +110,73 @@ About the origin of user's request:
 - country: ${requestHints.country}
 `;
 
+const getUserDetailPrompt = ({
+  firstName,
+  lastName,
+  age,
+  weight,
+  height,
+  dietaryPreference,
+  medicalConditions,
+}: {
+  firstName?: string;
+  lastName?: string;    
+  age?: number;
+  weight?: number;
+  height?: number;
+  dietaryPreference?: string;
+  medicalConditions?: string[];
+}) => {
+  return `\
+User details:
+- First Name: ${firstName}
+- Last Name: ${lastName}
+- Age: ${age}
+- Weight: ${weight}   
+- Height: ${height}
+- Dietary Preference: ${dietaryPreference}
+- Medical Conditions: ${medicalConditions?.join(', ')}
+`;
+}
+
 export const systemPrompt = ({
   selectedChatModel,
   requestHints,
+  firstName,
+  lastName,
+  age,
+  weight,
+  height,
+  dietaryPreference,
+  medicalConditions,
 }: {
   selectedChatModel: string;
   requestHints: RequestHints;
+  firstName?: string;
+  lastName?: string;
+  age?: string;
+  weight?: string;
+  height?: string;
+  dietaryPreference?: string;
+  medicalConditions?: string[];
 }) => {
   const requestPrompt = getRequestPromptFromHints(requestHints);
+  const userDetailPrompt = getUserDetailPrompt({
+    firstName,
+    lastName,
+    age: Number(age),
+    weight: Number(weight),
+    height: Number(height),
+    dietaryPreference,
+    medicalConditions,
+  });
 
-  if (selectedChatModel === 'chat-model-reasoning') {
-    return `${regularPrompt}\n\n${requestPrompt}`;
-  } else {
+  if(!firstName && !lastName && !age && !weight && !height && !dietaryPreference && !medicalConditions) {
     return `${regularPrompt}\n\n${requestPrompt}\n\n${artifactsPrompt}`;
   }
+ 
+  return `${regularPrompt}\n\n${requestPrompt}\n\n${userDetailPrompt} \n\n${artifactsPrompt}`;
+  
 };
 
 export const codePrompt = `
