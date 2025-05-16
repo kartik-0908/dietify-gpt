@@ -37,6 +37,8 @@ export default function OnboardingPage() {
     medicalConditions: [] as string[],
     customCondition: '',
   });
+  const [loading, setLoading] = useState(false); // <-- Add this line
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -74,6 +76,7 @@ export default function OnboardingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+     setLoading(true);
     try {
       const email = session?.user?.email || '';
       const res = await fetch('/api/user/update-details', {
@@ -101,6 +104,8 @@ export default function OnboardingPage() {
     } catch (err) {
       console.error('Error submitting onboarding:', err);
       toast.error('An error occurred while submitting your details.');
+    } finally {
+      setLoading(false); // <-- Reset loading state
     }
   };
 
@@ -261,8 +266,9 @@ export default function OnboardingPage() {
             <Button
               type="submit"
               className="w-full py-3 text-base font-semibold rounded-xl shadow-md transition-all hover:scale-[1.02] hover:bg-primary/90"
+              disabled={loading} // <-- Disable button when loading
             >
-              Submit
+              {loading ? 'Submitting...' : 'Submit'}
             </Button>
           </form>
         </CardContent>
