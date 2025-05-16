@@ -509,3 +509,44 @@ export async function getStreamIdsByChatId({ chatId }: { chatId: string }) {
     throw error;
   }
 }
+
+export async function updateUserPersonalDetails({
+  email,
+  firstName,
+  lastName,
+  age,
+  weight,
+  height,
+  mobileNumber,
+  dietaryPreference,
+  medicalConditions,
+}: {
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  age?: string;
+  weight?: string;
+  height?: string;
+  mobileNumber?: string;
+  dietaryPreference?: string;
+  medicalConditions?: string[];
+}) {
+  try {
+    return await db
+      .update(user)
+      .set({
+        firstName,
+        lastName,
+        age,
+        weight,
+        height,
+        mobileNumber,
+        dietaryPreference,
+        medicalConditions,
+      })
+      .where(eq(user.email, email));
+  } catch (error) {
+    console.error('Failed to update user personal details in database');
+    throw error;
+  }
+}

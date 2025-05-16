@@ -25,15 +25,33 @@ export async function middleware(request: NextRequest) {
 
   if (!token) {
     const redirectUrl = encodeURIComponent(request.url);
-
     return NextResponse.redirect(
       new URL(`/api/auth/guest?redirectUrl=${redirectUrl}`, request.url),
     );
   }
 
   const isGuest = guestRegex.test(token?.email ?? '');
+  const hasOnboarded = token?.hasOnboarded; // Adjust this based on your token/user object
 
-  if (token && !isGuest && ['/login', '/register'].includes(pathname)) {
+  // Redirect guest users to /register
+  if (isGuest && pathname !== '/register') {
+    const redirectUrl = encodeURIComponent(request.url);
+    return NextResponse.redirect(
+      new URL(`/register?redirectUrl=${redirectUrl}`, request.url),
+    );
+  }
+
+  // After registration, redirect to onboarding if not completed
+  if (!isGuest && !hasOnboarded && pathname === '/register') {
+    return NextResponse.redirect(new URL('/onboarding', request.url));
+  }
+
+  // If user tries to access / or /login without onboarding, redirect to onboarding
+  if (!isGuest && !hasOnboarded && ['/', '/login'].includes(pathname)) {
+    return NextResponse.redirect(new URL('/onboarding', request.url));
+  }
+
+  if (token && !isGuest && ['/login', '/register'].includes(pathname) && hasOnboarded) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 

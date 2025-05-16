@@ -15,6 +15,14 @@ export const user = pgTable('User', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
   email: varchar('email', { length: 64 }).notNull(),
   password: varchar('password', { length: 64 }),
+  firstName: varchar('firstName', { length: 32 }),
+  lastName: varchar('lastName', { length: 32 }),
+  age: varchar('age', { length: 3 }),
+  weight: varchar('weight', { length: 8 }),
+  height: varchar('height', { length: 8 }),
+  mobileNumber: varchar('mobileNumber', { length: 16 }),
+  dietaryPreference: varchar('dietaryPreference', { length: 64 }),
+  medicalConditions: json('medicalConditions').$type<string[]>(), // array of text
 });
 
 export type User = InferSelectModel<typeof user>;
