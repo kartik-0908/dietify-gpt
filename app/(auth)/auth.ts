@@ -20,6 +20,7 @@ declare module 'next-auth' {
     id?: string;
     email?: string | null;
     type: UserType;
+    first?: string
   }
 }
 
@@ -59,6 +60,11 @@ export const {
 
         if (!passwordsMatch) return null;
 
+        if(user.firstName){
+        return { ...user, type: 'regular', first: user.firstName };
+          
+        }
+
         return { ...user, type: 'regular' };
       },
     }),
@@ -67,7 +73,7 @@ export const {
       credentials: {},
       async authorize() {
         const [guestUser] = await createGuestUser();
-        return { ...guestUser, type: 'guest' };
+        return { ...guestUser, type: 'guest'};
       },
     }),
   ],
@@ -76,6 +82,7 @@ export const {
       if (user) {
         token.id = user.id as string;
         token.type = user.type;
+        token.first = user.first;
       }
 
       return token;

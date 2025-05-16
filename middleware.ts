@@ -31,15 +31,16 @@ export async function middleware(request: NextRequest) {
   }
 
   const isGuest = guestRegex.test(token?.email ?? '');
-  const hasOnboarded = token?.id; // Adjust this based on your token/user object
+  console.log(token)
+  const hasOnboarded = token.first; // Adjust this based on your token/user object
 
   // Redirect guest users to /register
-  if (isGuest && pathname !== '/register') {
-    const redirectUrl = encodeURIComponent(request.url);
-    return NextResponse.redirect(
-      new URL(`/register?redirectUrl=${redirectUrl}`, request.url),
-    );
-  }
+  if (isGuest && !['/register', '/login'].includes(pathname)) {
+  const redirectUrl = encodeURIComponent(request.url);
+  return NextResponse.redirect(
+    new URL(`/register?redirectUrl=${redirectUrl}`, request.url),
+  );
+}
 
   // After registration, redirect to onboarding if not completed
   if (!isGuest && !hasOnboarded && pathname === '/register') {
