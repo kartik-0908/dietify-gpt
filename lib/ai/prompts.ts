@@ -105,7 +105,7 @@ About the origin of user's request:
 const getUserDetailPrompt = ({
   firstName,
   lastName,
-  age,
+  datOfBirth,
   weight,
   height,
   dietaryPreference,
@@ -115,7 +115,7 @@ const getUserDetailPrompt = ({
 }: {
   firstName?: string;
   lastName?: string;
-  age?: string;
+  datOfBirth?: string;
   weight?: string;
   height?: string;
   dietaryPreference?: string;
@@ -127,7 +127,7 @@ const getUserDetailPrompt = ({
 User details:
 - First Name: ${firstName}
 - Last Name: ${lastName}
-- Age: ${age}
+- Age: ${datOfBirth}
 - Weight: ${weight}   
 - Height: ${height}
 - Dietary Preference: ${dietaryPreference}
@@ -143,7 +143,7 @@ export const systemPrompt = ({
   requestHints,
   firstName,
   lastName,
-  age,
+  dateOfBirth,
   weight,
   height,
   dietaryPreference,
@@ -155,7 +155,7 @@ export const systemPrompt = ({
   requestHints: RequestHints;
   firstName?: string;
   lastName?: string;
-  age?: string;
+  dateOfBirth?: string;
   weight?: string;
   height?: string;
   dietaryPreference?: string;
@@ -167,7 +167,7 @@ export const systemPrompt = ({
   const userDetailPrompt = getUserDetailPrompt({
     firstName,
     lastName,
-    age: age,
+    datOfBirth: dateOfBirth,
     weight: weight,
     height: height,
     dietaryPreference,

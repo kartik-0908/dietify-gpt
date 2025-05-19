@@ -164,7 +164,7 @@ export async function POST(request: Request) {
             requestHints,
             firstName: data?.firstName || "",
             lastName: data?.lastName || "",
-            age: data?.age || "",
+            dateOfBirth: data?.dateOfBirth || "",
             weight: data?.weight || "",
             height: data?.height || "",
             dietaryPreference: data?.dietaryPreference || "",
