@@ -23,8 +23,9 @@ const medicalConditionsList = [
 const dietaryPreferences = ['Veg', 'Non Veg', 'Vegan'];
 
 export default function OnboardingPage() {
-  const { data: session } = useSession();
   const router = useRouter();
+  const { data: session } = useSession();
+  
   
   const [form, setForm] = useState({
     firstName: '',
@@ -96,7 +97,9 @@ export default function OnboardingPage() {
       });
       if (res.ok) {
         toast.success('Onboarding details submitted successfully! Redirecting you to main page...');
-        router.push('/'); // Redirect to home
+       setTimeout(() => {
+    router.push('/'); // Redirect to home after a short delay
+  }, 1500); // Redirect to home
       } else {
         const errorData = await res.json();
         toast.error(`Error: ${errorData.message || 'Failed to submit onboarding.'}`);
