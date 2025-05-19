@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { updateUserPersonalDetails } from '@/lib/db/queries';
+import { updateUserPersonalDetails } from "@/lib/db/queries";
+import { type NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,7 +8,10 @@ export async function POST(req: NextRequest) {
     await updateUserPersonalDetails(body);
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error updating user details:', error);
-    return NextResponse.json({ success: false, error: (error as Error).message }, { status: 500 });
+    console.error("Error updating user details:", error);
+    return NextResponse.json(
+      { success: false, error: (error as Error).message },
+      { status: 500 }
+    );
   }
 }

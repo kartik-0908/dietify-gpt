@@ -27,6 +27,15 @@ const medicalConditionsList = [
 ];
 
 const dietaryPreferences = ["Veg", "Non Veg", "Vegan"];
+const fitnessGoals = ["Fatloss", "Muscle Gain", "Body Recomposition"];
+const activityLevels = [
+  "Sedentary",
+  "Light",
+  "Moderate",
+  "Active",
+  "Very Active",
+];
+const genders = ["Male", "Female", "Other"];
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -36,7 +45,7 @@ export default function OnboardingPage() {
     firstName: "",
     lastName: "",
     mobile: "",
-    age: "",
+    dateOfBirth: "",
     height: "",
     weight: "",
     dietaryPreference: "",
@@ -46,8 +55,21 @@ export default function OnboardingPage() {
     foodDisliking: [] as string[],
     foodLikingInput: "",
     foodDislikingInput: "",
+    fitnessGoal: "",
+    activityLevel: "",
+    gender: "",
   });
   const [loading, setLoading] = useState(false); // <-- Add this line
+
+  const handleFitnessGoalChange = (value: string) => {
+    setForm((prev) => ({ ...prev, fitnessGoal: value }));
+  };
+  const handleActivityLevelChange = (value: string) => {
+    setForm((prev) => ({ ...prev, activityLevel: value }));
+  };
+  const handleGenderChange = (value: string) => {
+    setForm((prev) => ({ ...prev, gender: value }));
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -135,12 +157,15 @@ export default function OnboardingPage() {
           email,
           firstName: form.firstName,
           lastName: form.lastName,
-          age: form.age,
+          dateOfBirth: form.dateOfBirth, // changed from age
           weight: form.weight,
           height: form.height,
           mobileNumber: form.mobile,
           dietaryPreference: form.dietaryPreference,
           medicalConditions: form.medicalConditions,
+          fitnessGoal: form.fitnessGoal,
+          activityLevel: form.activityLevel,
+          gender: form.gender,
         }),
       });
       if (res.ok) {
@@ -228,15 +253,15 @@ export default function OnboardingPage() {
               </div>
               <div className="flex gap-4">
                 <div className="flex-1">
-                  <Label htmlFor="age">Age</Label>
+                  <Label htmlFor="dateOfBirth">Date of Birth</Label>
                   <Input
-                    id="age"
-                    name="age"
-                    type="number"
-                    value={form.age}
+                    id="dateOfBirth"
+                    name="dateOfBirth"
+                    type="date"
+                    value={form.dateOfBirth}
                     onChange={handleChange}
                     required
-                    min={1}
+                    autoComplete="bday"
                   />
                 </div>
                 <div className="flex-1">
@@ -439,6 +464,59 @@ export default function OnboardingPage() {
                   ))}
                 </div>
               )}
+            </div>
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <Label htmlFor="gender">Gender</Label>
+                <Select value={form.gender} onValueChange={handleGenderChange}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {genders.map((g) => (
+                      <SelectItem key={g} value={g}>
+                        {g}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1">
+                <Label htmlFor="fitnessGoal">Fitness Goal</Label>
+                <Select
+                  value={form.fitnessGoal}
+                  onValueChange={handleFitnessGoalChange}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fitnessGoals.map((goal) => (
+                      <SelectItem key={goal} value={goal}>
+                        {goal}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1">
+                <Label htmlFor="activityLevel">Activity Level</Label>
+                <Select
+                  value={form.activityLevel}
+                  onValueChange={handleActivityLevelChange}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activityLevels.map((level) => (
+                      <SelectItem key={level} value={level}>
+                        {level}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <Button
               type="submit"

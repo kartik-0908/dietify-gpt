@@ -517,7 +517,7 @@ export async function updateUserPersonalDetails({
   email,
   firstName,
   lastName,
-  age,
+  dateOfBirth,
   weight,
   height,
   mobileNumber,
@@ -525,11 +525,14 @@ export async function updateUserPersonalDetails({
   medicalConditions,
   foodLiking,
   foodDisliking,
+  fitnessGoal,
+  activityLevel,
+  gender,
 }: {
   email: string;
   firstName?: string;
   lastName?: string;
-  age?: string;
+  dateOfBirth?: string; // changed from age
   weight?: string;
   height?: string;
   mobileNumber?: string;
@@ -537,6 +540,9 @@ export async function updateUserPersonalDetails({
   medicalConditions?: string[];
   foodLiking?: string[];
   foodDisliking?: string[];
+  fitnessGoal?: string;
+  activityLevel?: string;
+  gender?: string;
 }) {
   try {
     return await db
@@ -544,7 +550,7 @@ export async function updateUserPersonalDetails({
       .set({
         firstName,
         lastName,
-        age,
+        dateOfBirth, // changed from age
         weight,
         height,
         mobileNumber,
@@ -552,6 +558,9 @@ export async function updateUserPersonalDetails({
         medicalConditions,
         foodLiking,
         foodDisliking,
+        fitnessGoal,
+        activityLevel,
+        gender,
       })
       .where(eq(user.email, email));
   } catch (error) {
@@ -575,7 +584,7 @@ export async function getUserPersonalDetailsIfComplete({
     const {
       firstName,
       lastName,
-      age,
+      dateOfBirth,
       weight,
       height,
       mobileNumber,
@@ -587,7 +596,7 @@ export async function getUserPersonalDetailsIfComplete({
     return {
       firstName,
       lastName,
-      age,
+      dateOfBirth,
       weight,
       height,
       mobileNumber,
