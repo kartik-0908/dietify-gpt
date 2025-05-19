@@ -78,13 +78,20 @@ export const {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id as string;
         token.type = user.type;
         token.first = user.first;
       }
-
+      if(trigger === "update" && session.first){
+        console.log("trigger update");
+        console.log(session)
+        console.log(token)
+        token.first = session.first;
+        console.log("after changing token")
+        console.log(token)
+      }
       return token;
     },
     async session({ session, token }) {

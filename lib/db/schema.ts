@@ -23,6 +23,8 @@ export const user = pgTable('User', {
   mobileNumber: varchar('mobileNumber', { length: 16 }),
   dietaryPreference: varchar('dietaryPreference', { length: 64 }),
   medicalConditions: json('medicalConditions').$type<string[]>(), // array of text
+   foodLiking: json('foodLiking').$type<string[]>(), // array of strings
+  foodDisliking: json('foodDisliking').$type<string[]>(), // array of strings
 });
 
 export type User = InferSelectModel<typeof user>;

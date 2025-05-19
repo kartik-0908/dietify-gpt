@@ -520,6 +520,8 @@ export async function updateUserPersonalDetails({
   mobileNumber,
   dietaryPreference,
   medicalConditions,
+  foodLiking,
+  foodDisliking
 }: {
   email: string;
   firstName?: string;
@@ -530,6 +532,8 @@ export async function updateUserPersonalDetails({
   mobileNumber?: string;
   dietaryPreference?: string;
   medicalConditions?: string[];
+  foodLiking ? : string[];
+  foodDisliking ? : string[]
 }) {
   try {
     return await db
@@ -543,6 +547,8 @@ export async function updateUserPersonalDetails({
         mobileNumber,
         dietaryPreference,
         medicalConditions,
+        foodLiking,
+        foodDisliking
       })
       .where(eq(user.email, email));
   } catch (error) {
