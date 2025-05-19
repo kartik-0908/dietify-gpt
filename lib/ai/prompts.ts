@@ -1,5 +1,5 @@
-import type { ArtifactKind } from '@/components/artifact';
-import type { Geo } from '@vercel/functions';
+import type { ArtifactKind } from "@/components/artifact";
+import type { Geo } from "@vercel/functions";
 
 export const artifactsPrompt = `
 Artifacts is a special user interface mode that helps users with writing, editing, and other content creation tasks. When artifact is open, it is on the right side of the screen, while the conversation is on the left side. When creating or updating documents, changes are reflected in real-time on the artifacts and visible to the user.
@@ -32,8 +32,7 @@ This is a guide for using artifacts tools: \`createDocument\` and \`updateDocume
 Do not update document right after creating it. Wait for user feedback or request to update it.
 `;
 
-export const regularPrompt =
-  `
+export const regularPrompt = `
   You're an Instagram influencer named Dhruv, an expert in weight loss and flexible dieting. Your role is to educate users on how to lose weight while enjoying their favorite foods by balancing their overall diet. Use a conversational and supportive tone as you interact with your followers, offering personalized guidance and promoting your consultation services whenever relevant. Adapt your language based on the user's input: respond in English if they use English and in Hinglish if they use Hinglish.
 
 # Steps
@@ -96,10 +95,10 @@ Example 4
   `;
 
 export interface RequestHints {
-  latitude: Geo['latitude'];
-  longitude: Geo['longitude'];
-  city: Geo['city'];
-  country: Geo['country'];
+  latitude: Geo["latitude"];
+  longitude: Geo["longitude"];
+  city: Geo["city"];
+  country: Geo["country"];
 }
 
 export const getRequestPromptFromHints = (requestHints: RequestHints) => `\
@@ -118,14 +117,18 @@ const getUserDetailPrompt = ({
   height,
   dietaryPreference,
   medicalConditions,
+  foodLiking,
+  foodDislikings,
 }: {
   firstName?: string;
-  lastName?: string;    
-  age?: number;
-  weight?: number;
-  height?: number;
+  lastName?: string;
+  age?: string;
+  weight?: string;
+  height?: string;
   dietaryPreference?: string;
   medicalConditions?: string[];
+  foodLiking?: string[];
+  foodDislikings?: string[];
 }) => {
   return `\
 User details:
@@ -135,9 +138,12 @@ User details:
 - Weight: ${weight}   
 - Height: ${height}
 - Dietary Preference: ${dietaryPreference}
-- Medical Conditions: ${medicalConditions?.join(', ')}
+- Medical Conditions: ${medicalConditions?.join(", ")}
+- Food Likings : ${foodLiking?.join(", ")}
+- Food Dislikings : ${foodDislikings?.join(", ")}
+
 `;
-}
+};
 
 export const systemPrompt = ({
   selectedChatModel,
@@ -149,6 +155,8 @@ export const systemPrompt = ({
   height,
   dietaryPreference,
   medicalConditions,
+  foodLiking,
+  foodDislikings,
 }: {
   selectedChatModel: string;
   requestHints: RequestHints;
@@ -159,24 +167,25 @@ export const systemPrompt = ({
   height?: string;
   dietaryPreference?: string;
   medicalConditions?: string[];
+  foodLiking?: string[];
+  foodDislikings?: string[];
 }) => {
   const requestPrompt = getRequestPromptFromHints(requestHints);
   const userDetailPrompt = getUserDetailPrompt({
     firstName,
     lastName,
-    age: Number(age),
-    weight: Number(weight),
-    height: Number(height),
+    age: age,
+    weight: weight,
+    height: height,
     dietaryPreference,
     medicalConditions,
+    foodLiking,
+    foodDislikings,
   });
 
-  if(!firstName && !lastName && !age && !weight && !height && !dietaryPreference && !medicalConditions) {
-    return `${regularPrompt}\n\n${requestPrompt}\n\n${artifactsPrompt}`;
-  }
- 
-  return `${regularPrompt}\n\n${requestPrompt}\n\n${userDetailPrompt} \n\n${artifactsPrompt}`;
-  
+  const finalPrpmpt = `${regularPrompt}\n\n${requestPrompt}\n\n${userDetailPrompt} \n\n${artifactsPrompt}`;
+  console.log(finalPrpmpt);
+  return finalPrpmpt;
 };
 
 export const codePrompt = `
@@ -211,24 +220,24 @@ You are a spreadsheet creation assistant. Create a spreadsheet in csv format bas
 
 export const updateDocumentPrompt = (
   currentContent: string | null,
-  type: ArtifactKind,
+  type: ArtifactKind
 ) =>
-  type === 'text'
+  type === "text"
     ? `\
 Improve the following contents of the document based on the given prompt.
 
 ${currentContent}
 `
-    : type === 'code'
-      ? `\
+    : type === "code"
+    ? `\
 Improve the following code snippet based on the given prompt.
 
 ${currentContent}
 `
-      : type === 'sheet'
-        ? `\
+    : type === "sheet"
+    ? `\
 Improve the following spreadsheet based on the given prompt.
 
 ${currentContent}
 `
-        : '';
+    : "";
