@@ -139,7 +139,8 @@ User details:
 };
 
 export const systemPrompt = ({
-  selectedChatModel,
+  email,
+  prompt,
   requestHints,
   firstName,
   lastName,
@@ -151,7 +152,8 @@ export const systemPrompt = ({
   foodLiking,
   foodDislikings,
 }: {
-  selectedChatModel: string;
+  email: string;
+  prompt: string;
   requestHints: RequestHints;
   firstName?: string;
   lastName?: string;
@@ -175,6 +177,14 @@ export const systemPrompt = ({
     foodLiking,
     foodDislikings,
   });
+
+  if (
+    email === "abc@abc.com" ||
+    email === "dtdhruvtayal2004@gmail.com" ||
+    email === "gargnaman705@gmail.com"
+  ) {
+    return `${prompt}\n\n${requestPrompt}\n\n${userDetailPrompt} \n\n${artifactsPrompt}`;
+  }
 
   const finalPrpmpt = `${regularPrompt}\n\n${requestPrompt}\n\n${userDetailPrompt} \n\n${artifactsPrompt}`;
   console.log(finalPrpmpt);

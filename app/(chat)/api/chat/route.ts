@@ -15,6 +15,7 @@ import {
   getMessagesByChatId,
   getStreamIdsByChatId,
   getUserPersonalDetailsIfComplete,
+  getUserPromptByEmail,
   saveChat,
   saveMessages,
 } from "@/lib/db/queries";
@@ -153,12 +154,15 @@ export async function POST(request: Request) {
     const streamId = generateUUID();
     await createStreamId({ streamId, chatId: id });
 
+    const prompt = (await getUserPromptByEmail(session.user.email || "")) || "";
+
     const stream = createDataStream({
       execute: (dataStream) => {
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
           system: systemPrompt({
-            selectedChatModel,
+            email: session.user.email || "",
+            prompt: prompt,
             foodLiking: data?.foodLiking || [],
             foodDislikings: data?.foodDisliking || [],
             requestHints,

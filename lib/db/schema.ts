@@ -28,6 +28,7 @@ export const user = pgTable("User", {
   fitnessGoal: varchar("fitnessGoal", { length: 32 }), // new
   activityLevel: varchar("activityLevel", { length: 32 }), // new
   gender: varchar("gender", { length: 16 }), // new
+  prompt: text("prompt"),
 });
 
 export type User = InferSelectModel<typeof user>;

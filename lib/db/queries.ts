@@ -610,3 +610,29 @@ export async function getUserPersonalDetailsIfComplete({
     throw error;
   }
 }
+
+// Get the prompt for a user by email
+export async function getUserPromptByEmail(
+  email: string
+): Promise<string | null> {
+  try {
+    const [userRecord] = await db
+      .select({ prmtp: user.prompt })
+      .from(user)
+      .where(eq(user.email, email));
+    return userRecord?.prmtp ?? null;
+  } catch (error) {
+    console.error("Failed to get user prompt from database");
+    throw error;
+  }
+}
+
+// Update the prompt for a user by email
+export async function updateUserPromptByEmail(email: string, prompt: string) {
+  try {
+    await db.update(user).set({ prompt }).where(eq(user.email, email));
+  } catch (error) {
+    console.error("Failed to update user prompt in database");
+    throw error;
+  }
+}
