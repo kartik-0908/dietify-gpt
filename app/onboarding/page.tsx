@@ -26,7 +26,7 @@ const medicalConditionsList = [
   "Heart Disease",
 ];
 
-const dietaryPreferences = ["Veg", "Non Veg", "Vegan"];
+const dietaryPreferences = ["Veg", "Non Veg", "Veg & Non Veg (Both)", "Vegan"];
 const fitnessGoals = ["Fatloss", "Muscle Gain", "Body Recomposition"];
 const activityLevels = [
   "Sedentary",
