@@ -19,6 +19,7 @@ import { MessageEditor } from "./message-editor";
 import { DocumentPreview } from "./document-preview";
 import { MessageReasoning } from "./message-reasoning";
 import type { UseChatHelpers } from "@ai-sdk/react";
+import { CaloriesLogged } from "./calorieIntake";
 
 const PurePreviewMessage = ({
   chatId,
@@ -193,6 +194,8 @@ const PurePreviewMessage = ({
                     <div key={toolCallId}>
                       {toolName === "logWaterIntake" ? (
                         <WaterLogged waterData={result} />
+                      ) : toolName === "logCaloriesIntake" ? (
+                        <CaloriesLogged caloriesData={result} />
                       ) : toolName === "createDocument" ? (
                         <DocumentPreview
                           isReadonly={isReadonly}

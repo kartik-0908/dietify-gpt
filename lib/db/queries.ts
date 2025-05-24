@@ -10,6 +10,7 @@ import {
   gte,
   inArray,
   lt,
+  lte,
   type SQL,
 } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -29,6 +30,8 @@ import {
   stream,
   waterIntakeLog,
   type WaterIntakeLog,
+  caloriesIntakeLog,
+  type CaloriesIntakeLog,
 } from "./schema";
 import type { ArtifactKind } from "@/components/artifact";
 import { generateUUID } from "../utils";
@@ -717,6 +720,283 @@ export async function addWaterIntake(
     };
   } catch (error) {
     console.error("Error adding water intake:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
+interface AddCaloriesIntakeParams {
+  userId: string;
+  calories: number;
+  foodItem: string;
+  quantity?: number;
+  unit?: string;
+  mealType?: "breakfast" | "lunch" | "dinner" | "snack";
+  consumedAt?: Date;
+  notes?: string;
+  source?: "manual" | "app" | "barcode";
+}
+
+interface AddCaloriesIntakeResult {
+  success: boolean;
+  data?: CaloriesIntakeLog;
+  error?: string;
+}
+
+/**
+ * Adds a calories intake log entry for a user
+ * @param params - Object containing calories intake parameters
+ * @returns Promise with result containing success status and data/error
+ */
+export async function addCaloriesIntake(
+  params: AddCaloriesIntakeParams
+): Promise<AddCaloriesIntakeResult> {
+  try {
+    const {
+      userId,
+      calories,
+      foodItem,
+      quantity,
+      unit,
+      mealType = "snack",
+      consumedAt = new Date(),
+      notes,
+      source = "manual",
+    } = params;
+
+    // Validate required parameters
+    if (!userId) {
+      return {
+        success: false,
+        error: "User ID is required",
+      };
+    }
+
+    if (!calories || calories <= 0) {
+      return {
+        success: false,
+        error: "Calories must be a positive number",
+      };
+    }
+
+    if (!foodItem || foodItem.trim().length === 0) {
+      return {
+        success: false,
+        error: "Food item name is required",
+      };
+    }
+
+    // Validate meal type
+    if (!["breakfast", "lunch", "dinner", "snack"].includes(mealType)) {
+      return {
+        success: false,
+        error: "Meal type must be 'breakfast', 'lunch', 'dinner', or 'snack'",
+      };
+    }
+
+    // Validate quantity if provided
+    if (quantity !== undefined && quantity <= 0) {
+      return {
+        success: false,
+        error: "Quantity must be a positive number",
+      };
+    }
+
+    // Insert calories intake log
+    const result = await db
+      .insert(caloriesIntakeLog)
+      .values({
+        userId,
+        calories: calories.toString(),
+        foodItem: foodItem.trim(),
+        quantity: quantity ? quantity.toString() : null,
+        unit: unit || null,
+        mealType,
+        consumedAt,
+        createdAt: new Date(),
+        notes: notes || null,
+        source,
+      })
+      .returning();
+
+    if (result.length === 0) {
+      return {
+        success: false,
+        error: "Failed to create calories intake log",
+      };
+    }
+
+    return {
+      success: true,
+      data: result[0],
+    };
+  } catch (error) {
+    console.error("Error adding calories intake:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
+/**
+ * Convenience function to add calories intake with just essential details
+ * @param userId - User's UUID
+ * @param calories - Number of calories
+ * @param foodItem - Name of the food item
+ * @param mealType - Type of meal
+ * @returns Promise with result
+ */
+export async function addCaloriesIntakeSimple(
+  userId: string,
+  calories: number,
+  foodItem: string,
+  mealType: "breakfast" | "lunch" | "dinner" | "snack" = "snack"
+): Promise<AddCaloriesIntakeResult> {
+  return addCaloriesIntake({
+    userId,
+    calories,
+    foodItem,
+    mealType,
+  });
+}
+
+/**
+ * Add multiple calories intake entries for a user (bulk insert)
+ * @param userId - User's UUID
+ * @param entries - Array of calories intake entries
+ * @returns Promise with results
+ */
+export async function addMultipleCaloriesIntakes(
+  userId: string,
+  entries: Array<{
+    calories: number;
+    foodItem: string;
+    quantity?: number;
+    unit?: string;
+    mealType?: "breakfast" | "lunch" | "dinner" | "snack";
+    consumedAt?: Date;
+    notes?: string;
+    source?: "manual" | "app" | "barcode";
+  }>
+): Promise<{ success: boolean; data?: CaloriesIntakeLog[]; error?: string }> {
+  try {
+    if (!userId) {
+      return {
+        success: false,
+        error: "User ID is required",
+      };
+    }
+
+    if (!entries || entries.length === 0) {
+      return {
+        success: false,
+        error: "At least one entry is required",
+      };
+    }
+
+    // Validate all entries first
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      if (!entry.calories || entry.calories <= 0) {
+        return {
+          success: false,
+          error: `Entry ${i + 1}: Calories must be a positive number`,
+        };
+      }
+      if (!entry.foodItem || entry.foodItem.trim().length === 0) {
+        return {
+          success: false,
+          error: `Entry ${i + 1}: Food item name is required`,
+        };
+      }
+    }
+
+    // Prepare data for bulk insert
+    const insertData = entries.map((entry) => ({
+      userId,
+      calories: entry.calories.toString(),
+      foodItem: entry.foodItem.trim(),
+      quantity: entry.quantity ? entry.quantity.toString() : null,
+      unit: entry.unit || null,
+      mealType: entry.mealType || "snack",
+      consumedAt: entry.consumedAt || new Date(),
+      createdAt: new Date(),
+      notes: entry.notes || null,
+      source: entry.source || "manual",
+    }));
+
+    // Bulk insert
+    const result = await db
+      .insert(caloriesIntakeLog)
+      .values(insertData)
+      .returning();
+
+    return {
+      success: true,
+      data: result,
+    };
+  } catch (error) {
+    console.error("Error adding multiple calories intakes:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
+/**
+ * Get daily calories total for a user
+ * @param userId - User's UUID
+ * @param date - Date to get calories for (defaults to today)
+ * @returns Promise with total calories for the day
+ */
+export async function getDailyCaloriesTotal(
+  userId: string,
+  date: Date = new Date()
+): Promise<{ success: boolean; total?: number; error?: string }> {
+  try {
+    if (!userId) {
+      return {
+        success: false,
+        error: "User ID is required",
+      };
+    }
+
+    // Get start and end of the specified date
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Query calories for the day
+    const result = await db
+      .select({
+        calories: caloriesIntakeLog.calories,
+      })
+      .from(caloriesIntakeLog)
+      .where(
+        and(
+          eq(caloriesIntakeLog.userId, userId),
+          gte(caloriesIntakeLog.consumedAt, startOfDay),
+          lte(caloriesIntakeLog.consumedAt, endOfDay)
+        )
+      );
+
+    // Sum up the calories
+    const total = result.reduce((sum, entry) => {
+      return sum + Number.parseFloat(entry.calories);
+    }, 0);
+
+    return {
+      success: true,
+      total: Math.round(total * 100) / 100, // Round to 2 decimal places
+    };
+  } catch (error) {
+    console.error("Error getting daily calories total:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error occurred",

@@ -37,6 +37,7 @@ import {
 import { after } from "next/server";
 import type { Chat } from "@/lib/db/schema";
 import { differenceInSeconds } from "date-fns";
+import { logCaloriesIntake } from "@/lib/ai/tools/logCalorie";
 
 export const maxDuration = 60;
 
@@ -181,6 +182,7 @@ export async function POST(request: Request) {
               ? []
               : [
                   "logWaterIntake",
+                  "logCaloriesIntake",
                   "createDocument",
                   "updateDocument",
                   "requestSuggestions",
@@ -189,6 +191,7 @@ export async function POST(request: Request) {
           experimental_generateMessageId: generateUUID,
           tools: {
             logWaterIntake: logWaterIntake({ userId }),
+            logCaloriesIntake: logCaloriesIntake({ userId }),
             createDocument: createDocument({ session, dataStream }),
             updateDocument: updateDocument({ session, dataStream }),
             requestSuggestions: requestSuggestions({
