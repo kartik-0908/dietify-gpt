@@ -32,6 +32,8 @@ import {
   type WaterIntakeLog,
   caloriesIntakeLog,
   type CaloriesIntakeLog,
+  userMemory,
+  type UserMemory,
 } from "./schema";
 import type { ArtifactKind } from "@/components/artifact";
 import { generateUUID } from "../utils";
@@ -997,6 +999,332 @@ export async function getDailyCaloriesTotal(
     };
   } catch (error) {
     console.error("Error getting daily calories total:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
+interface AddUserMemoryParams {
+  userId: string;
+  memoryContent: string;
+  memoryType?: "preference" | "goal" | "fact" | "routine" | "general";
+  importanceScore?: number;
+  tags?: string[];
+  source?: "conversation" | "profile" | "activity" | "inference";
+}
+
+interface AddUserMemoryResult {
+  success: boolean;
+  data?: UserMemory;
+  error?: string;
+}
+
+/**
+ * Adds a memory entry for a specific user
+ * @param params - Object containing user memory parameters
+ * @returns Promise with result containing success status and data/error
+ */
+export async function addUserMemory(
+  params: AddUserMemoryParams
+): Promise<AddUserMemoryResult> {
+  try {
+    const {
+      userId,
+      memoryContent,
+      memoryType = "general",
+      importanceScore = 5,
+      tags,
+      source = "conversation",
+    } = params;
+
+    // Validate required parameters
+    if (!userId) {
+      return {
+        success: false,
+        error: "User ID is required",
+      };
+    }
+
+    if (!memoryContent || memoryContent.trim().length === 0) {
+      return {
+        success: false,
+        error: "Memory content is required",
+      };
+    }
+
+    // Validate memory type
+    if (
+      !["preference", "goal", "fact", "routine", "general"].includes(memoryType)
+    ) {
+      return {
+        success: false,
+        error:
+          "Memory type must be 'preference', 'goal', 'fact', 'routine', or 'general'",
+      };
+    }
+
+    // Validate importance score
+    if (importanceScore < 1 || importanceScore > 10) {
+      return {
+        success: false,
+        error: "Importance score must be between 1 and 10",
+      };
+    }
+
+    // Validate source
+    if (
+      !["conversation", "profile", "activity", "inference"].includes(source)
+    ) {
+      return {
+        success: false,
+        error:
+          "Source must be 'conversation', 'profile', 'activity', or 'inference'",
+      };
+    }
+
+    const now = new Date();
+
+    // Insert user memory
+    const result = await db
+      .insert(userMemory)
+      .values({
+        userId,
+        memoryContent: memoryContent.trim(),
+        memoryType,
+        importanceScore,
+        tags: tags || null,
+        source,
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
+
+    if (result.length === 0) {
+      return {
+        success: false,
+        error: "Failed to create user memory",
+      };
+    }
+
+    return {
+      success: true,
+      data: result[0],
+    };
+  } catch (error) {
+    console.error("Error adding user memory:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
+/**
+ * Convenience function to add a simple memory with minimal parameters
+ * @param userId - User's UUID
+ * @param memoryContent - The memory content
+ * @param memoryType - Type of memory
+ * @param importanceScore - Importance score (1-10)
+ * @returns Promise with result
+ */
+export async function addUserMemorySimple(
+  userId: string,
+  memoryContent: string,
+  memoryType:
+    | "preference"
+    | "goal"
+    | "fact"
+    | "routine"
+    | "general" = "general",
+  importanceScore = 5
+): Promise<AddUserMemoryResult> {
+  return addUserMemory({
+    userId,
+    memoryContent,
+    memoryType,
+    importanceScore,
+  });
+}
+
+/**
+ * Add multiple memories for a user (bulk insert)
+ * @param userId - User's UUID
+ * @param memories - Array of memory entries
+ * @returns Promise with results
+ */
+export async function addMultipleUserMemories(
+  userId: string,
+  memories: Array<{
+    memoryContent: string;
+    memoryType?: "preference" | "goal" | "fact" | "routine" | "general";
+    importanceScore?: number;
+    tags?: string[];
+    source?: "conversation" | "profile" | "activity" | "inference";
+  }>
+): Promise<{ success: boolean; data?: UserMemory[]; error?: string }> {
+  try {
+    if (!userId) {
+      return {
+        success: false,
+        error: "User ID is required",
+      };
+    }
+
+    if (!memories || memories.length === 0) {
+      return {
+        success: false,
+        error: "At least one memory is required",
+      };
+    }
+
+    // Validate all memories first
+    for (let i = 0; i < memories.length; i++) {
+      const memory = memories[i];
+      if (!memory.memoryContent || memory.memoryContent.trim().length === 0) {
+        return {
+          success: false,
+          error: `Memory ${i + 1}: Memory content is required`,
+        };
+      }
+    }
+
+    const now = new Date();
+
+    // Prepare data for bulk insert
+    const insertData = memories.map((memory) => ({
+      userId,
+      memoryContent: memory.memoryContent.trim(),
+      memoryType: memory.memoryType || "general",
+      importanceScore: memory.importanceScore || 5,
+      tags: memory.tags || null,
+      source: memory.source || "conversation",
+      isActive: true,
+      createdAt: now,
+      updatedAt: now,
+    }));
+
+    // Bulk insert
+    const result = await db.insert(userMemory).values(insertData).returning();
+
+    return {
+      success: true,
+      data: result,
+    };
+  } catch (error) {
+    console.error("Error adding multiple user memories:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
+/**
+ * Get user memories by type and importance
+ * @param userId - User's UUID
+ * @param memoryType - Optional filter by memory type
+ * @param minImportance - Minimum importance score to retrieve
+ * @param limit - Maximum number of memories to return
+ * @returns Promise with user memories
+ */
+export async function getUserMemories(
+  userId: string,
+  memoryType?: "preference" | "goal" | "fact" | "routine" | "general",
+  minImportance = 1,
+  limit = 50
+): Promise<{ success: boolean; data?: UserMemory[]; error?: string }> {
+  try {
+    if (!userId) {
+      return {
+        success: false,
+        error: "User ID is required",
+      };
+    }
+
+    // Build query conditions
+    const conditions = [
+      eq(userMemory.userId, userId),
+      eq(userMemory.isActive, true),
+      gte(userMemory.importanceScore, minImportance),
+    ];
+
+    if (memoryType) {
+      conditions.push(eq(userMemory.memoryType, memoryType));
+    }
+
+    // Query memories
+    const result = await db
+      .select()
+      .from(userMemory)
+      .where(and(...conditions))
+      .orderBy(desc(userMemory.importanceScore), desc(userMemory.updatedAt))
+      .limit(limit);
+
+    return {
+      success: true,
+      data: result,
+    };
+  } catch (error) {
+    console.error("Error getting user memories:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
+/**
+ * Update a user memory (for updating importance or content)
+ * @param memoryId - Memory's UUID
+ * @param updates - Fields to update
+ * @returns Promise with result
+ */
+export async function updateUserMemory(
+  memoryId: string,
+  updates: {
+    memoryContent?: string;
+    memoryType?: "preference" | "goal" | "fact" | "routine" | "general";
+    importanceScore?: number;
+    tags?: string[];
+    isActive?: boolean;
+  }
+): Promise<AddUserMemoryResult> {
+  try {
+    if (!memoryId) {
+      return {
+        success: false,
+        error: "Memory ID is required",
+      };
+    }
+
+    const updateData = {
+      ...updates,
+      updatedAt: new Date(),
+    };
+
+    // Update memory
+    const result = await db
+      .update(userMemory)
+      .set(updateData)
+      .where(eq(userMemory.id, memoryId))
+      .returning();
+
+    if (result.length === 0) {
+      return {
+        success: false,
+        error: "Memory not found or update failed",
+      };
+    }
+
+    return {
+      success: true,
+      data: result[0],
+    };
+  } catch (error) {
+    console.error("Error updating user memory:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error occurred",

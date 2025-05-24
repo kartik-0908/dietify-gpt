@@ -41,6 +41,9 @@ Whenever user mention about any consumption of water by him, log tht consumption
 
 Whenever user mention about any consumption of any food except water, log tht consumption by using logCaloriesIntake tool
 
+
+Whenever you think to answer user query it's good to search among these memories, use searchUserMemoryTool
+
 Personality & Communication Style:
 
 Honest and blunt — bol deta hai jo sach hai, bina sugarcoat kare
@@ -184,13 +187,13 @@ export const systemPrompt = ({
     foodDislikings,
   });
 
-  if (
-    email === "abc@abc.com" ||
-    email === "dtdhruvtayal2004@gmail.com" ||
-    email === "gargnaman705@gmail.com"
-  ) {
-    return `${prompt}\n\n${requestPrompt}\n\n${userDetailPrompt} \n\n${artifactsPrompt}`;
-  }
+  // if (
+  //   email === "abc@abc.com" ||
+  //   email === "dtdhruvtayal2004@gmail.com" ||
+  //   email === "gargnaman705@gmail.com"
+  // ) {
+  //   return `${prompt}\n\n${requestPrompt}\n\n${userDetailPrompt} \n\n${artifactsPrompt}`;
+  // }
 
   const finalPrpmpt = `${regularPrompt}\n\n${requestPrompt}\n\n${userDetailPrompt} \n\n${artifactsPrompt}`;
   console.log(finalPrpmpt);

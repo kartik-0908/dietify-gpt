@@ -19,7 +19,6 @@ import type { Session } from "next-auth";
 import { useSearchParams } from "next/navigation";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
 import { useAutoResume } from "@/hooks/use-auto-resume";
-import HangingBanner from "./chat-header/banner";
 
 export function Chat({
   id,

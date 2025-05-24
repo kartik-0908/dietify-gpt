@@ -1,21 +1,21 @@
 "use client";
 
-interface WaterLoggedData {
+interface MemoriesSearchedData {
   success: boolean;
   message: string;
 }
 
-const SAMPLE: WaterLoggedData = {
+const SAMPLE: MemoriesSearchedData = {
   success: true,
-  message: "Successfully logged 250ml of water intake",
+  message: "Retrieved recent memories for personalized conversation",
 };
 
-export function WaterLogged({
-  waterData = SAMPLE,
+export function MemoriesSearched({
+  memoriesData = SAMPLE,
 }: {
-  waterData?: WaterLoggedData;
+  memoriesData?: MemoriesSearchedData;
 }) {
-  if (!waterData.success) {
+  if (!memoriesData.success) {
     return (
       <div className="flex items-center gap-3 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-destructive max-w-sm">
         <div className="size-5 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0">
@@ -29,7 +29,7 @@ export function WaterLogged({
             <path d="M18 6L6 18M6 6l12 12" />
           </svg>
         </div>
-        <p className="text-sm font-medium">{waterData.message}</p>
+        <p className="text-sm font-medium">{memoriesData.message}</p>
       </div>
     );
   }
@@ -44,10 +44,11 @@ export function WaterLogged({
           className="w-3 h-3"
           strokeWidth="2"
         >
-          <path d="M20 6L9 17l-5-5" />
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.35-4.35" />
         </svg>
       </div>
-      <p className="text-sm font-medium">{waterData.message}</p>
+      <p className="text-sm font-medium">{memoriesData.message}</p>
     </div>
   );
 }

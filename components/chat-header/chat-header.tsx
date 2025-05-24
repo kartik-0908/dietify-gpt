@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useWindowSize } from "usehooks-ts";
 
@@ -10,8 +9,6 @@ import { Button } from "@/components/ui/button";
 import { PlusIcon } from "../icons";
 import { useSidebar } from "../ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
-import HangingBanner from "./banner"; // the fixed banner you updated earlier
-import { Plus } from "lucide-react";
 
 export function ChatHeader() {
   const router = useRouter();

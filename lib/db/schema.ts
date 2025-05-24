@@ -10,6 +10,7 @@ import {
   foreignKey,
   boolean,
   decimal,
+  integer,
 } from "drizzle-orm/pg-core";
 
 export const user = pgTable("User", {
@@ -216,3 +217,22 @@ export const caloriesIntakeLog = pgTable("CaloriesIntakeLog", {
 });
 
 export type CaloriesIntakeLog = InferSelectModel<typeof caloriesIntakeLog>;
+
+export const userMemory = pgTable("UserMemory", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id),
+  memoryContent: text("memoryContent").notNull(), // The actual memory/information about the user
+  memoryType: varchar("memoryType", { length: 32 })
+    .notNull()
+    .default("general"), // "preference", "goal", "fact", "routine", "general"
+  importanceScore: integer("importanceScore").notNull().default(5), // 1-10 scale for memory importance
+  tags: json("tags").$type<string[]>(), // Tags for categorization and retrieval
+  source: varchar("source", { length: 32 }).notNull().default("conversation"), // "conversation", "profile", "activity", "inference"
+  isActive: boolean("isActive").notNull().default(true), // For soft deletion
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export type UserMemory = InferSelectModel<typeof userMemory>;

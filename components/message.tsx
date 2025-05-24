@@ -20,6 +20,7 @@ import { DocumentPreview } from "./document-preview";
 import { MessageReasoning } from "./message-reasoning";
 import type { UseChatHelpers } from "@ai-sdk/react";
 import { CaloriesLogged } from "./calorieIntake";
+import { MemoriesSearched } from "./memory";
 
 const PurePreviewMessage = ({
   chatId,
@@ -196,6 +197,13 @@ const PurePreviewMessage = ({
                         <WaterLogged waterData={result} />
                       ) : toolName === "logCaloriesIntake" ? (
                         <CaloriesLogged caloriesData={result} />
+                      ) : toolName === "searchUserMemoryTool" ? (
+                        <MemoriesSearched
+                          memoriesData={{
+                            success: true,
+                            message: "Retrieved recent memories",
+                          }}
+                        />
                       ) : toolName === "createDocument" ? (
                         <DocumentPreview
                           isReadonly={isReadonly}

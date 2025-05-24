@@ -2,12 +2,14 @@ import {
   appendClientMessage,
   appendResponseMessages,
   createDataStream,
+  generateText,
   smoothStream,
   streamText,
 } from "ai";
 import { auth, type UserType } from "@/app/(auth)/auth";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import {
+  addUserMemory,
   createStreamId,
   deleteChatById,
   getChatById,
@@ -38,6 +40,7 @@ import { after } from "next/server";
 import type { Chat } from "@/lib/db/schema";
 import { differenceInSeconds } from "date-fns";
 import { logCaloriesIntake } from "@/lib/ai/tools/logCalorie";
+import { searchUserMemoryTool } from "@/lib/ai/tools/memory";
 
 export const maxDuration = 60;
 
@@ -61,6 +64,152 @@ function getStreamContext() {
   }
 
   return globalStreamContext;
+}
+
+async function shouldStoreAsMemoryLLM(
+  messageText: string,
+  provider = myProvider
+): Promise<boolean> {
+  try {
+    const result = await generateText({
+      model: myProvider.languageModel("chat-model"), // Use faster model for analysis
+      system: `You are a memory analyzer. Determine if a user message contains information worth remembering for future conversations.
+
+Store messages that contain:
+- Personal preferences (food, exercise, lifestyle)
+- Goals and aspirations
+- Health information or medical conditions
+- Routines and habits
+- Important facts about the user
+- Meaningful experiences or context
+
+DO NOT store messages that are:
+- Simple greetings (hi, hello, thanks)
+- Basic questions without personal context
+- Very short responses (ok, yes, no, sure)
+- Commands or requests without personal information
+
+Respond with only "YES" if it should be stored, or "NO" if it shouldn't.`,
+      prompt: `Should this message be stored as a memory? Message: "${messageText}"`,
+      maxTokens: 10,
+    });
+
+    return result.text.trim().toUpperCase() === "YES";
+  } catch (error) {
+    console.error("Failed to analyze message with LLM:", error);
+    // Fallback to storing if LLM fails
+    return messageText.length > 10;
+  }
+}
+
+async function extractMemoryContentLLM(
+  messageText: string,
+  provider = myProvider
+): Promise<{
+  memoryContent: string;
+  memoryType: "preference" | "goal" | "fact" | "routine" | "general";
+  importanceScore: number;
+  tags: string[];
+}> {
+  try {
+    const result = await generateText({
+      model: myProvider.languageModel("chat-model"), // Use faster model for extraction
+      system: `You are a memory extractor. Extract and summarize the key information from user messages that should be remembered.
+
+Create a concise memory entry (max 100 characters) that captures the essential information.
+
+Classify the memory type:
+- preference: likes, dislikes, preferences
+- goal: aspirations, targets, objectives
+- fact: personal facts, conditions, circumstances
+- routine: habits, regular activities, schedules
+- general: other meaningful information
+
+Rate importance (1-10):
+- 9-10: Critical health/medical info, major goals
+- 7-8: Important preferences, significant facts
+- 5-6: Regular habits, moderate preferences
+- 3-4: Minor preferences, general info
+- 1-2: Least important context
+
+Extract relevant tags from: nutrition, fitness, health, sleep, hydration, weight, medical, work, family, hobby
+
+Respond in this exact JSON format:
+{
+  "memoryContent": "concise summary",
+  "memoryType": "type",
+  "importanceScore": number,
+  "tags": ["tag1", "tag2"]
+}`,
+      prompt: `Extract key information from: "${messageText}"`,
+      maxTokens: 200,
+    });
+
+    // Parse the JSON response
+    const parsed = JSON.parse(result.text.trim());
+
+    // Validate the response
+    if (
+      !parsed.memoryContent ||
+      !parsed.memoryType ||
+      !parsed.importanceScore
+    ) {
+      throw new Error("Invalid LLM response format");
+    }
+
+    return {
+      memoryContent: parsed.memoryContent.substring(0, 200), // Ensure max length
+      memoryType: parsed.memoryType,
+      importanceScore: Math.max(1, Math.min(10, parsed.importanceScore)), // Clamp to 1-10
+      tags: Array.isArray(parsed.tags) ? parsed.tags : [],
+    };
+  } catch (error) {
+    console.error("Failed to extract memory content with LLM:", error);
+    // Fallback to basic extraction
+    return {
+      memoryContent:
+        messageText.substring(0, 100) + (messageText.length > 100 ? "..." : ""),
+      memoryType: "general",
+      importanceScore: 5,
+      tags: [],
+    };
+  }
+}
+
+// Function to store user message as memory using LLM analysis (non-blocking)
+async function storeMessageAsMemoryLLM(userId: string, messageText: string) {
+  try {
+    // Skip very short messages
+    if (messageText.trim().length < 5) {
+      return;
+    }
+
+    // Use LLM to determine if message should be stored
+    const shouldStore = await shouldStoreAsMemoryLLM(messageText);
+
+    if (!shouldStore) {
+      return;
+    }
+
+    // Use LLM to extract and summarize the key information
+    const memoryData = await extractMemoryContentLLM(messageText);
+
+    await addUserMemory({
+      userId,
+      memoryContent: memoryData.memoryContent,
+      memoryType: memoryData.memoryType,
+      importanceScore: memoryData.importanceScore,
+      tags: memoryData.tags.length > 0 ? memoryData.tags : undefined,
+      source: "conversation",
+    });
+
+    console.log(
+      `Stored memory for user ${userId}: ${memoryData.memoryContent}`
+    );
+  } catch (error) {
+    console.error("Failed to store message as memory:", error);
+    // Don't throw - we don't want memory storage failures to break the chat
+  }
 }
 
 export async function POST(request: Request) {
@@ -148,6 +297,16 @@ export async function POST(request: Request) {
       ],
     });
     const userId = session.user.id;
+
+    const messageText = message.parts
+      .filter((part) => part.type === "text")
+      .map((part) => part.text)
+      .join(" ");
+
+    // Fire and forget - don't await to avoid blocking the chat response
+    storeMessageAsMemoryLLM(userId, messageText).catch((error) => {
+      console.error("Memory storage failed:", error);
+    });
     const data = await getUserPersonalDetailsIfComplete({
       userId,
     });
@@ -186,12 +345,14 @@ export async function POST(request: Request) {
                   "createDocument",
                   "updateDocument",
                   "requestSuggestions",
+                  "searchUserMemoryTool",
                 ],
           experimental_transform: smoothStream({ chunking: "word" }),
           experimental_generateMessageId: generateUUID,
           tools: {
             logWaterIntake: logWaterIntake({ userId }),
             logCaloriesIntake: logCaloriesIntake({ userId }),
+            searchUserMemoryTool: searchUserMemoryTool({ userId }),
             createDocument: createDocument({ session, dataStream }),
             updateDocument: updateDocument({ session, dataStream }),
             requestSuggestions: requestSuggestions({
