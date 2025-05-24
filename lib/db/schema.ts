@@ -9,6 +9,7 @@ import {
   primaryKey,
   foreignKey,
   boolean,
+  decimal,
 } from "drizzle-orm/pg-core";
 
 export const user = pgTable("User", {
@@ -182,3 +183,18 @@ export const stream = pgTable(
 );
 
 export type Stream = InferSelectModel<typeof stream>;
+
+export const waterIntakeLog = pgTable("WaterIntakeLog", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id),
+  amount: decimal("amount", { precision: 6, scale: 2 }).notNull(), // Amount in ml/oz
+  unit: varchar("unit", { length: 8 }).notNull().default("ml"), // "ml" or "oz"
+  consumedAt: timestamp("consumedAt").notNull(), // When the water was consumed
+  createdAt: timestamp("createdAt").notNull().defaultNow(), // When the log entry was created
+  notes: text("notes"), // Optional notes (e.g., "with meal", "after workout")
+  source: varchar("source", { length: 32 }).default("manual"), // How the entry was created: "manual", "app", "device"
+});
+
+export type WaterIntakeLog = InferSelectModel<typeof waterIntakeLog>;

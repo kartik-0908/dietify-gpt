@@ -24,7 +24,7 @@ import { generateTitleFromUserMessage } from "../../actions";
 import { createDocument } from "@/lib/ai/tools/create-document";
 import { updateDocument } from "@/lib/ai/tools/update-document";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
-import { getWeather } from "@/lib/ai/tools/get-weather";
+import { logWaterIntake } from "@/lib/ai/tools/logWater";
 import { isProductionEnvironment } from "@/lib/constants";
 import { myProvider } from "@/lib/ai/providers";
 import { entitlementsByUserType } from "@/lib/ai/entitlements";
@@ -180,7 +180,7 @@ export async function POST(request: Request) {
             selectedChatModel === "chat-model-reasoning"
               ? []
               : [
-                  "getWeather",
+                  "logWaterIntake",
                   "createDocument",
                   "updateDocument",
                   "requestSuggestions",
@@ -188,7 +188,7 @@ export async function POST(request: Request) {
           experimental_transform: smoothStream({ chunking: "word" }),
           experimental_generateMessageId: generateUUID,
           tools: {
-            getWeather,
+            logWaterIntake: logWaterIntake({ userId }),
             createDocument: createDocument({ session, dataStream }),
             updateDocument: updateDocument({ session, dataStream }),
             requestSuggestions: requestSuggestions({
@@ -244,7 +244,8 @@ export async function POST(request: Request) {
           sendReasoning: true,
         });
       },
-      onError: () => {
+      onError: (e) => {
+        console.error(e);
         return "Oops, an error occurred!";
       },
     });

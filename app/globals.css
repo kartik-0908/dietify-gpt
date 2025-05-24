@@ -77,6 +77,8 @@
         --sidebar-accent-foreground: 145 64% 42%;
         --sidebar-border: 194 50% 90%;
         --sidebar-ring: 145 64% 42%;
+        --ai-gradient-start: 262 100% 54%;  /* hsl(262,100%,54%) — vibrant purple */
+        --ai-gradient-end:   180 100% 45%;  /* hsl(180,100%,45%) — deep teal */
     }
 
     /* ---------- DARK THEME ---------- */
@@ -124,6 +126,8 @@
         --sidebar-accent-foreground: 194 15% 85%;
         --sidebar-border: 210 10% 25%;
         --sidebar-ring: 145 64% 48%;
+        --ai-gradient-start: 262 100% 64%;  /* brighten for dark bg */
+        --ai-gradient-end:   180 100% 55%;  /* brighten for dark bg */
     }
 }
 

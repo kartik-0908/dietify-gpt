@@ -27,6 +27,8 @@ import {
   type DBMessage,
   type Chat,
   stream,
+  waterIntakeLog,
+  type WaterIntakeLog,
 } from "./schema";
 import type { ArtifactKind } from "@/components/artifact";
 import { generateUUID } from "../utils";
@@ -634,5 +636,90 @@ export async function updateUserPromptByEmail(email: string, prompt: string) {
   } catch (error) {
     console.error("Failed to update user prompt in database");
     throw error;
+  }
+}
+
+interface AddWaterIntakeParams {
+  userId: string;
+  amount: number;
+  unit?: "ml" | "oz";
+  consumedAt?: Date;
+  notes?: string;
+  source?: "manual" | "app" | "device";
+}
+
+interface AddWaterIntakeResult {
+  success: boolean;
+  data?: WaterIntakeLog;
+  error?: string;
+}
+
+export async function addWaterIntake(
+  params: AddWaterIntakeParams
+): Promise<AddWaterIntakeResult> {
+  try {
+    const {
+      userId,
+      amount,
+      unit = "ml",
+      consumedAt = new Date(),
+      notes,
+      source = "manual",
+    } = params;
+
+    // Validate required parameters
+    if (!userId) {
+      return {
+        success: false,
+        error: "User ID is required",
+      };
+    }
+
+    if (!amount || amount <= 0) {
+      return {
+        success: false,
+        error: "Amount must be a positive number",
+      };
+    }
+
+    // Validate unit
+    if (!["ml", "oz"].includes(unit)) {
+      return {
+        success: false,
+        error: "Unit must be either 'ml' or 'oz'",
+      };
+    }
+
+    // Insert water intake log
+    const result = await db
+      .insert(waterIntakeLog)
+      .values({
+        userId,
+        amount: amount.toString(), // Convert to string for decimal field
+        unit,
+        consumedAt,
+        createdAt: new Date(),
+        notes: notes || null,
+        source,
+      })
+      .returning();
+
+    if (result.length === 0) {
+      return {
+        success: false,
+        error: "Failed to create water intake log",
+      };
+    }
+
+    return {
+      success: true,
+      data: result[0],
+    };
+  } catch (error) {
+    console.error("Error adding water intake:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
   }
 }
