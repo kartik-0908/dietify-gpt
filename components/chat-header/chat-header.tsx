@@ -9,6 +9,9 @@ import { Button } from "@/components/ui/button";
 import { PlusIcon } from "../icons";
 import { useSidebar } from "../ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { AnimatePresence } from "framer-motion";
+import HangingBanner from "./banner";
+import { ChevronDownIcon } from "lucide-react";
 
 export function ChatHeader() {
   const router = useRouter();
@@ -21,18 +24,17 @@ export function ChatHeader() {
   return (
     <>
       {/* ───────── Banner (fixed, no layout shift) ───────── */}
-      {/* <AnimatePresence>
-        {showBanner && <HangingBanner text="Hello from the top!" />}
-      </AnimatePresence> */}
+      <AnimatePresence>{showBanner && <HangingBanner />}</AnimatePresence>
 
       {/* ───────── Header ───────── */}
       <header className="flex sticky top-0 bg-background py-1.5 items-center px-2 gap-2 z-10 overflow-x-hidden">
         <SidebarToggle />
 
-        {(!open || windowWidth < 768) && (
+        {/* {(!open || windowWidth < 768) && (
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
+                type="button"
                 variant="outline"
                 className="md:px-2 px-2 md:h-fit ml-0"
                 onClick={() => {
@@ -45,22 +47,23 @@ export function ChatHeader() {
             </TooltipTrigger>
             <TooltipContent>New Chat</TooltipContent>
           </Tooltip>
-        )}
+        )} */}
 
         {/* pushes right-hand buttons to the edge */}
-        {/* <div className="flex-1" /> */}
+        <div className="flex-1" />
 
         {/* ─── Banner-toggle button lives *inside* the header ─── */}
-        {/* <Tooltip>
+        <Tooltip>
           <TooltipTrigger asChild>
             <Button
+              type="button"
               variant="ghost"
               size="icon"
               onClick={() => setShowBanner((prev) => !prev)}
             >
-              <Plus
+              <ChevronDownIcon
                 className={`h-5 w-5 transition-transform ${
-                  showBanner ? "rotate-45" : ""
+                  showBanner ? "rotate-180" : ""
                 }`}
               />
             </Button>
@@ -68,7 +71,7 @@ export function ChatHeader() {
           <TooltipContent>
             {showBanner ? "Hide banner" : "Show banner"}
           </TooltipContent>
-        </Tooltip> */}
+        </Tooltip>
       </header>
     </>
   );

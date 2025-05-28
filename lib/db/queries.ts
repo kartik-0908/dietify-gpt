@@ -1331,3 +1331,185 @@ export async function updateUserMemory(
     };
   }
 }
+
+/**
+ * Get current date range for India (IST timezone)
+ * @returns Object with start and end of today in IST
+ */
+function getTodayIST() {
+  const now = new Date();
+
+  // Convert to IST (UTC + 5:30)
+  const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+  const istNow = new Date(now.getTime() + istOffset);
+
+  // Get start of day (00:00:00) in IST
+  const startOfDay = new Date(istNow);
+  startOfDay.setHours(0, 0, 0, 0);
+
+  // Get end of day (23:59:59.999) in IST
+  const endOfDay = new Date(istNow);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  // Convert back to UTC for database storage
+  const startOfDayUTC = new Date(startOfDay.getTime() - istOffset);
+  const endOfDayUTC = new Date(endOfDay.getTime() - istOffset);
+
+  return {
+    startOfDay: startOfDayUTC,
+    endOfDay: endOfDayUTC,
+    currentIST: istNow,
+  };
+}
+
+/**
+ * Fetch today's total calorie intake for a user
+ * @param userId - User's UUID
+ * @returns Promise with total calories and detailed logs
+ */
+export async function getTodayCalorieIntake(userId: string) {
+  try {
+    const { startOfDay, endOfDay } = getTodayIST();
+
+    // Fetch detailed calorie logs for today
+    const calorieEntries = await db
+      .select()
+      .from(caloriesIntakeLog)
+      .where(
+        and(
+          eq(caloriesIntakeLog.userId, userId),
+          gte(caloriesIntakeLog.consumedAt, startOfDay),
+          lte(caloriesIntakeLog.consumedAt, endOfDay)
+        )
+      )
+      .orderBy(caloriesIntakeLog.consumedAt);
+
+    // Calculate total calories
+    const totalCalories = calorieEntries.reduce((sum, entry) => {
+      return sum + Number.parseFloat(entry.calories.toString());
+    }, 0);
+
+    // Group by meal type for better insights
+    const caloriesByMeal = calorieEntries.reduce((acc, entry) => {
+      const mealType = entry.mealType;
+      if (!acc[mealType]) {
+        acc[mealType] = {
+          calories: 0,
+          entries: [],
+        };
+      }
+      acc[mealType].calories += Number.parseFloat(entry.calories.toString());
+      acc[mealType].entries.push(entry);
+      return acc;
+    }, {} as Record<string, { calories: number; entries: typeof calorieEntries }>);
+
+    return {
+      success: true,
+      data: {
+        totalCalories,
+        entryCount: calorieEntries.length,
+        entries: calorieEntries,
+        caloriesByMeal,
+        date: getTodayIST().currentIST.toISOString().split("T")[0],
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching today's calorie intake:", error);
+    return {
+      success: false,
+      error: "Failed to fetch calorie intake data",
+      data: null,
+    };
+  }
+}
+
+/**
+ * Fetch today's total water intake for a user
+ * @param userId - User's UUID
+ * @returns Promise with total water intake and detailed logs
+ */
+export async function getTodayWaterIntake(userId: string) {
+  try {
+    const { startOfDay, endOfDay } = getTodayIST();
+
+    // Fetch detailed water intake logs for today
+    const waterEntries = await db
+      .select()
+      .from(waterIntakeLog)
+      .where(
+        and(
+          eq(waterIntakeLog.userId, userId),
+          gte(waterIntakeLog.consumedAt, startOfDay),
+          lte(waterIntakeLog.consumedAt, endOfDay)
+        )
+      )
+      .orderBy(waterIntakeLog.consumedAt);
+
+    // Calculate total water intake (convert all to ml for consistency)
+    let totalWaterML = 0;
+    const waterByUnit = { ml: 0, oz: 0 };
+
+    waterEntries.forEach((entry) => {
+      const amount = Number.parseFloat(entry.amount.toString());
+      if (entry.unit === "oz") {
+        // Convert oz to ml (1 oz = 29.5735 ml)
+        totalWaterML += amount * 29.5735;
+        waterByUnit.oz += amount;
+      } else {
+        // Already in ml
+        totalWaterML += amount;
+        waterByUnit.ml += amount;
+      }
+    });
+
+    return {
+      success: true,
+      data: {
+        totalWaterML: Math.round(totalWaterML * 100) / 100, // Round to 2 decimal places
+        totalWaterOZ: Math.round((totalWaterML / 29.5735) * 100) / 100,
+        entryCount: waterEntries.length,
+        entries: waterEntries,
+        waterByUnit,
+        date: getTodayIST().currentIST.toISOString().split("T")[0],
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching today's water intake:", error);
+    return {
+      success: false,
+      error: "Failed to fetch water intake data",
+      data: null,
+    };
+  }
+}
+
+/**
+ * Combined function to get both calorie and water intake for today
+ * @param userId - User's UUID
+ * @returns Promise with both calorie and water intake data
+ */
+export async function getTodayIntakeSummary(userId: string) {
+  try {
+    const [calorieResult, waterResult] = await Promise.all([
+      getTodayCalorieIntake(userId),
+      getTodayWaterIntake(userId),
+    ]);
+
+    return {
+      success: true,
+      data: {
+        calories: calorieResult.data,
+        water: waterResult.data,
+        date: getTodayIST().currentIST.toISOString().split("T")[0],
+        timezone: "IST (UTC+5:30)",
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching today's intake summary:", error);
+    return {
+      success: false,
+      error: "Failed to fetch intake summary",
+      data: null,
+    };
+  }
+}
