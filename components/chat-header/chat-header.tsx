@@ -1,23 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useWindowSize } from "usehooks-ts";
-
 import { SidebarToggle } from "@/components/sidebar-toggle";
 import { Button } from "@/components/ui/button";
-import { PlusIcon } from "../icons";
-import { useSidebar } from "../ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { AnimatePresence } from "framer-motion";
 import HangingBanner from "./banner";
 import { ChevronDownIcon } from "lucide-react";
 
 export function ChatHeader() {
-  const router = useRouter();
-  const { open } = useSidebar();
-  const { width: windowWidth } = useWindowSize();
-
   // controls banner visibility
   const [showBanner, setShowBanner] = useState(false);
 
@@ -29,25 +20,6 @@ export function ChatHeader() {
       {/* ───────── Header ───────── */}
       <header className="flex sticky top-0 bg-background py-1.5 items-center px-2 gap-2 z-10 overflow-x-hidden">
         <SidebarToggle />
-
-        {/* {(!open || windowWidth < 768) && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                className="md:px-2 px-2 md:h-fit ml-0"
-                onClick={() => {
-                  router.push("/");
-                  router.refresh();
-                }}
-              >
-                <PlusIcon />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>New Chat</TooltipContent>
-          </Tooltip>
-        )} */}
 
         {/* pushes right-hand buttons to the edge */}
         <div className="flex-1" />
@@ -69,7 +41,7 @@ export function ChatHeader() {
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            {showBanner ? "Hide banner" : "Show banner"}
+            {showBanner ? "Hide Today's intake" : "Show Today's intake"}
           </TooltipContent>
         </Tooltip>
       </header>
