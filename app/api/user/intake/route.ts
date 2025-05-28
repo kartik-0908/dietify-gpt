@@ -44,35 +44,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-
-// Optional: Also create a more detailed GET route that returns full breakdown
-export async function GET_DETAILED(req: NextRequest) {
-  try {
-    // Same auth logic as above
-    const userId = req.nextUrl.searchParams.get("userId");
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: "User ID is required" },
-        { status: 400 }
-      );
-    }
-
-    const intakeData = await getTodayIntakeSummary(userId);
-
-    if (!intakeData.success) {
-      return NextResponse.json(
-        { success: false, error: intakeData.error },
-        { status: 500 }
-      );
-    }
-
-    // Return the full detailed data including entries and meal breakdowns
-    return NextResponse.json(intakeData);
-  } catch (error) {
-    console.error("Error fetching detailed intake data:", error);
-    return NextResponse.json(
-      { success: false, error: (error as Error).message },
-      { status: 500 }
-    );
-  }
-}
