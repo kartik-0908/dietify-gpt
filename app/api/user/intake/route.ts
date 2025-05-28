@@ -1,6 +1,8 @@
 import { getTodayIntakeSummary } from "@/lib/db/queries"; // Adjust path to where you put the intake functions
 import { type NextRequest, NextResponse } from "next/server";
 
+export const revalidate = 60;
+
 export async function GET(req: NextRequest) {
   try {
     const userId = req.nextUrl.searchParams.get("userId");
