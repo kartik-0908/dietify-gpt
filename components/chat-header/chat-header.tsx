@@ -31,6 +31,7 @@ export function ChatHeader() {
               type="button"
               variant="ghost"
               size="icon"
+              className="border-2"
               onClick={() => setShowBanner((prev) => !prev)}
             >
               <ChevronDownIcon

@@ -1338,6 +1338,7 @@ export async function updateUserMemory(
  */
 function getTodayIST() {
   const now = new Date();
+  console.log(now);
 
   // Convert to IST (UTC + 5:30)
   const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
