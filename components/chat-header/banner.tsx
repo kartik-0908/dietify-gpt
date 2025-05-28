@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Droplet, Flame } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useSession } from "next-auth/react";
+import { LoaderIcon } from "../icons";
 
 // Animated Number Component with counting effect
 const AnimatedNumber = ({
@@ -312,7 +313,7 @@ const HangingBanner = () => {
                 ease: "linear",
               }}
             >
-              <Flame className="w-5 h-5" />
+              <LoaderIcon />
             </motion.div>
             <span>Loading...</span>
           </motion.div>
