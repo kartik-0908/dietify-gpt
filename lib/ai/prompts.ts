@@ -43,8 +43,6 @@ use this tool for only logging the water Intake by user.
 Whenever user mention about any consumption of any food except water, log tht consumption by using logCaloriesIntake tool.
 use this tool for only logging the food intake by user.
 
-Currently you can't log any workout done by user.
-
 
 Whenever you think to answer user query it's good to search among these memories, use searchUserMemoryTool
 
