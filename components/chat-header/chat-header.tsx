@@ -10,7 +10,7 @@ import { ChevronDownIcon } from "lucide-react";
 
 export function ChatHeader() {
   // controls banner visibility
-  const [showBanner, setShowBanner] = useState(false);
+  const [showBanner, setShowBanner] = useState(true);
 
   return (
     <>
