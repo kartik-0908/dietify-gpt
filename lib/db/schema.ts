@@ -210,6 +210,9 @@ export const caloriesIntakeLog = pgTable("CaloriesIntakeLog", {
   quantity: decimal("quantity", { precision: 6, scale: 2 }), // Quantity consumed (e.g., 1.5)
   unit: varchar("unit", { length: 32 }), // Unit of quantity (e.g., "cup", "piece", "gram")
   mealType: varchar("mealType", { length: 32 }).notNull().default("snack"), // "breakfast", "lunch", "dinner", "snack"
+  carbs: decimal("carbs", { precision: 6, scale: 2 }), // Carbohydrates in grams
+  proteins: decimal("proteins", { precision: 6, scale: 2 }), // Proteins in grams
+  fats: decimal("fats", { precision: 6, scale: 2 }), // Fats in grams
   consumedAt: timestamp("consumedAt").notNull(), // When the food was consumed
   createdAt: timestamp("createdAt").notNull().defaultNow(), // When the log entry was created
   notes: text("notes"), // Optional notes (e.g., "homemade", "restaurant")

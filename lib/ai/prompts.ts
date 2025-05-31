@@ -176,7 +176,6 @@ export const systemPrompt = ({
   foodLiking?: string[];
   foodDislikings?: string[];
 }) => {
-  const requestPrompt = getRequestPromptFromHints(requestHints);
   const userDetailPrompt = getUserDetailPrompt({
     firstName,
     lastName,
@@ -197,7 +196,7 @@ export const systemPrompt = ({
   //   return `${prompt}\n\n${requestPrompt}\n\n${userDetailPrompt} \n\n${artifactsPrompt}`;
   // }
 
-  const finalPrpmpt = `${regularPrompt}\n\n${requestPrompt}\n\n${userDetailPrompt} \n\n${artifactsPrompt}`;
+  const finalPrpmpt = `${regularPrompt}\n\n${userDetailPrompt} \n\n${artifactsPrompt}`;
   console.log(finalPrpmpt);
   return finalPrpmpt;
 };

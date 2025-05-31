@@ -34,6 +34,9 @@ export async function GET(req: NextRequest) {
         // Optional: include entry counts for additional context
         calorieEntryCount: intakeData.data?.calories?.entryCount || 0,
         waterEntryCount: intakeData.data?.water?.entryCount || 0,
+        carbsAmount: intakeData.data?.carbsAmount || 0,
+        proteinsAmount: intakeData.data?.proteinsAmount || 0,
+        fatsAmount: intakeData.data?.fatsAmount || 0,
       },
     };
 

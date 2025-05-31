@@ -736,6 +736,9 @@ interface AddCaloriesIntakeParams {
   quantity?: number;
   unit?: string;
   mealType?: "breakfast" | "lunch" | "dinner" | "snack";
+  carbs?: number;
+  proteins?: number;
+  fats?: number;
   consumedAt?: Date;
   notes?: string;
   source?: "manual" | "app" | "barcode";
@@ -763,6 +766,9 @@ export async function addCaloriesIntake(
       quantity,
       unit,
       mealType = "snack",
+      carbs,
+      proteins,
+      fats,
       consumedAt = new Date(),
       notes,
       source = "manual",
@@ -816,6 +822,9 @@ export async function addCaloriesIntake(
         quantity: quantity ? quantity.toString() : null,
         unit: unit || null,
         mealType,
+        carbs: carbs !== undefined ? carbs.toString() : null,
+        proteins: proteins !== undefined ? proteins.toString() : null,
+        fats: fats !== undefined ? fats.toString() : null,
         consumedAt,
         createdAt: new Date(),
         notes: notes || null,
@@ -1496,6 +1505,23 @@ export async function getTodayIntakeSummary(userId: string) {
       getTodayWaterIntake(userId),
     ]);
 
+    // Calculate total carbs, proteins, and fats for today
+    let carbsAmount = 0;
+    let proteinsAmount = 0;
+    let fatsAmount = 0;
+
+    if (calorieResult.success && calorieResult.data?.entries) {
+      for (const entry of calorieResult.data.entries) {
+        carbsAmount += Number.parseFloat(entry.carbs || "0");
+        proteinsAmount += Number.parseFloat(entry.proteins || "0");
+        fatsAmount += Number.parseFloat(entry.fats || "0");
+      }
+      // Round to 2 decimal places
+      carbsAmount = Math.round(carbsAmount * 100) / 100;
+      proteinsAmount = Math.round(proteinsAmount * 100) / 100;
+      fatsAmount = Math.round(fatsAmount * 100) / 100;
+    }
+
     return {
       success: true,
       data: {
@@ -1503,6 +1529,9 @@ export async function getTodayIntakeSummary(userId: string) {
         water: waterResult.data,
         date: getTodayIST().currentIST.toISOString().split("T")[0],
         timezone: "IST (UTC+5:30)",
+        carbsAmount,
+        proteinsAmount,
+        fatsAmount,
       },
     };
   } catch (error) {

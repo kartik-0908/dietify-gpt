@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Droplet, Flame } from "lucide-react";
+import { Droplet, Flame, UtensilsCrossed } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useSession } from "next-auth/react";
 import { LoaderIcon } from "../icons";
@@ -71,9 +71,11 @@ const SimpleMetric = ({
 const HangingBanner = () => {
   const { data: session } = useSession();
   const userId = session?.user.id;
-  console.log(userId);
   const [calories, setCalories] = useState<number>(0);
   const [water, setWater] = useState<number>(0);
+  const [carbs, setCarbs] = useState<number>(0);
+  const [proteins, setProteins] = useState<number>(0);
+  const [fats, setFats] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [initialLoad, setInitialLoad] = useState(true);
 
@@ -89,22 +91,34 @@ const HangingBanner = () => {
             setTimeout(() => {
               setCalories(result.data.calorieAmount || 0);
               setWater(result.data.waterIntakeAmount || 0);
+              setCarbs(result.data.carbsAmount || 0);
+              setProteins(result.data.proteinsAmount || 0);
+              setFats(result.data.fatsAmount || 0);
               setInitialLoad(false);
             }, 300);
           } else {
             setCalories(result.data.calorieAmount || 0);
             setWater(result.data.waterIntakeAmount || 0);
+            setCarbs(result.data.carbsAmount || 0);
+            setProteins(result.data.proteinsAmount || 0);
+            setFats(result.data.fatsAmount || 0);
           }
         } else {
           console.error("Failed to fetch intake data:", result.error);
           setCalories(0);
           setWater(0);
+          setCarbs(0);
+          setProteins(0);
+          setFats(0);
           setInitialLoad(false);
         }
       } catch (error) {
         console.error("Error fetching intake data:", error);
         setCalories(0);
         setWater(0);
+        setCarbs(0);
+        setProteins(0);
+        setFats(0);
         setInitialLoad(false);
       } finally {
         setIsLoading(false);
@@ -127,9 +141,23 @@ const HangingBanner = () => {
         },
         (payload) => {
           console.log(payload.new);
-          const newRecord = payload.new as { calories: number };
+          const newRecord = payload.new as {
+            calories: number;
+            carbs: number;
+            proteins: number;
+            fats: number;
+          };
           setCalories(
             (prev) => prev + Number.parseFloat(newRecord.calories.toString())
+          );
+          setCarbs(
+            (prev) => prev + Number.parseFloat(newRecord.carbs.toString())
+          );
+          setProteins(
+            (prev) => prev + Number.parseFloat(newRecord.proteins.toString())
+          );
+          setFats(
+            (prev) => prev + Number.parseFloat(newRecord.fats.toString())
           );
         }
       )
@@ -161,6 +189,9 @@ const HangingBanner = () => {
 
   const formatCalories = (c: number) => `${c} kcal`;
   const formatWater = (w: number) => `${w} ml`;
+  const formatCarbs = (c: number) => `${c}g carbs`;
+  const formatProteins = (p: number) => `${p}g protein`;
+  const formatFats = (f: number) => `${f}g fat`;
 
   return (
     <motion.div
@@ -170,11 +201,10 @@ const HangingBanner = () => {
       transition={{ type: "spring", stiffness: 120, damping: 14 }}
     >
       <div
-        className="relative inline-flex items-center space-x-2 sm:space-x-6 bg-primary text-primary-foreground
-           dark:bg-secondary dark:text-secondary-foreground
-           font-bold px-3 py-1.5 sm:px-8 sm:py-4 rounded-lg shadow-xl
-           border border-primary dark:border-secondary
-           pointer-events-auto backdrop-blur-sm text-xs sm:text-base"
+        className="relative flex flex-col items-center w-[65vw] max-w-[420px] bg-primary text-primary-foreground
+    dark:bg-secondary dark:text-secondary-foreground font-bold px-2 py-1.5 sm:px-8 sm:py-4 rounded-lg shadow-xl
+    border border-primary dark:border-secondary pointer-events-auto backdrop-blur-sm text-xs sm:text-base"
+        style={{ textAlign: "center" }}
       >
         {/* Static ropes */}
         <span className="absolute -top-12 left-3 h-12 w-px bg-foreground" />
@@ -185,7 +215,7 @@ const HangingBanner = () => {
         <span className="absolute -top-1.5 right-2 w-3 h-3 bg-foreground rounded-full" />
 
         {isLoading ? (
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 justify-center w-full">
             <motion.div
               animate={{ rotate: 360 }}
               transition={{
@@ -199,21 +229,40 @@ const HangingBanner = () => {
             <span>Loading...</span>
           </div>
         ) : (
-          <div className="flex items-center space-x-6">
-            <SimpleMetric
-              icon={<Flame className="w-5 h-5 text-orange-200" />}
-              value={calories}
-              formatter={formatCalories}
-            />
-
-            <div className="w-px h-6 bg-current opacity-30" />
-
-            <SimpleMetric
-              icon={<Droplet className="w-5 h-5 text-blue-300" />}
-              value={water}
-              formatter={formatWater}
-            />
-          </div>
+          <>
+            {/* Main row: Calories & Water */}
+            <div className="flex items-center space-x-4 sm:space-x-6 w-full justify-center text-center">
+              <SimpleMetric
+                icon={<Flame className="w-5 h-5 text-orange-200" />}
+                value={calories}
+                formatter={formatCalories}
+              />
+              <div className="w-px h-6 bg-current opacity-30" />
+              <SimpleMetric
+                icon={<Droplet className="w-5 h-5 text-blue-300" />}
+                value={water}
+                formatter={formatWater}
+              />
+            </div>
+            {/* Macros row: Carbs, Proteins, Fats */}
+            <div className="flex items-center space-x-3 sm:space-x-6 mt-1 text-[10px] sm:text-xs opacity-80 w-full justify-center text-center">
+              <SimpleMetric
+                icon={<UtensilsCrossed className="w-4 h-4 text-green-400" />}
+                value={carbs}
+                formatter={formatCarbs}
+              />
+              <SimpleMetric
+                icon={<UtensilsCrossed className="w-4 h-4 text-blue-400" />}
+                value={proteins}
+                formatter={formatProteins}
+              />
+              <SimpleMetric
+                icon={<UtensilsCrossed className="w-4 h-4 text-yellow-400" />}
+                value={fats}
+                formatter={formatFats}
+              />
+            </div>
+          </>
         )}
       </div>
     </motion.div>
