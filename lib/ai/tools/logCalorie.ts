@@ -4,9 +4,13 @@ import { z } from "zod";
 
 export const logCaloriesIntake = ({ userId }: { userId: string }) =>
   tool({
-    description: "Log and save the calories intake by User",
+    description:
+      "Log and save the calories and other macros like carbs, protiens and fats intake by User",
     parameters: z.object({
       calories: z.number().positive("Calories must be a positive number"),
+      carbs: z.number().positive("Carbs must be a positive number"),
+      proteins: z.number().positive("Proteins must be a positive number"),
+      fats: z.number().positive("Fats must be a positive number"),
       foodItem: z
         .string()
         .min(1, "Food item name is required")
@@ -20,9 +24,7 @@ export const logCaloriesIntake = ({ userId }: { userId: string }) =>
         .enum(["breakfast", "lunch", "dinner", "snack"])
         .optional()
         .default("snack"),
-      carbs: z.number().positive("Carbs must be a positive number"),
-      proteins: z.number().positive("Proteins must be a positive number"),
-      fats: z.number().positive("Fats must be a positive number"),
+
       consumedAt: z.string().datetime().optional(),
       notes: z.string().optional(),
       source: z.enum(["manual", "app", "barcode"]).optional().default("app"),
